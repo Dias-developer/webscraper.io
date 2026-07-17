@@ -1,5 +1,5 @@
 # importing
-from parser import parsing
+from parsing import parsing
 
 url = 'https://webscraper.io/test-sites/pagination'
 
