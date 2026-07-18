@@ -33,8 +33,8 @@ def parsing(url):
             price = f"{currency} {p}"
 
             products.append({
-                'title': title,
-                'price': price,
+                'title': title if title else "Not found",
+                'price': price if price else "Not found",
             })
         next_b = catalog_soup.find('a', class_='page-link next')
         if next_b:
