@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor # Для многопоточности
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry # Для того что бы парсер не падал
 import threading
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0'}
@@ -8,16 +10,25 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 def make_session(): # Для создания сессий для каталога
     session = requests.Session()
     session.headers.update(headers)
+
+    retry = Retry(
+    total=5,
+    backoff_factor=1,                 # 1s, 2s, 4s, 8s...
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+    respect_retry_after_header=True,
+    )
+
+    session.mount('https://', HTTPAdapter(max_retries=retry))
+    session.mount('http://', HTTPAdapter(max_retries=retry))
+
     return session
-
-
 
 thread_local = threading.local()
 def get_session(): # Для создания сессий для товаров
     if not hasattr(thread_local, 'session'):
         thread_local.session = make_session()
     return thread_local.session
-
 
 
 def parse_product(link): # Парсит товары
